@@ -24,31 +24,25 @@ NYC_Transit <- read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
 # show the first several lines of the original data
 head(NYC_Transit)
 # clean the data and convert "entry" from char to logical.
-NYC_Transit_tidy <- NYC_Transit %>% 
+NYC_Transit <- NYC_Transit %>% 
   janitor::clean_names() %>% 
-  mutate(entry = recode(entry, 'YES' = TRUE, 'NO' = FALSE)) %>% 
-  mutate(route8 = as.character(route8), route9 = as.character(route9),
-         route10 = as.character(route10), route11 = as.character(route11)) %>% 
-  pivot_longer(route1:route11, names_to = "route_number",
-               names_prefix = "route", values_to = "route_name") %>% 
-  drop_na(route_name)
+  select(line, station_name, station_latitude, station_longitude,
+         route1:route11, entry, vending, entrance_type, ada) %>% 
+  mutate(entry = recode(entry, 'YES' = TRUE, 'NO' = FALSE))
 # show the first several lines of the cleaned data
-head(NYC_Transit_tidy)
-skimr::skim(NYC_Transit_tidy)
-# show the specific changed columns
-NYC_Transit_tidy %>% 
-  select(entry, route_number, route_name)
+head(NYC_Transit)
+skimr::skim(NYC_Transit)
 ```
 
 Write a short paragraph about this dataset – explain briefly what variables the dataset contains, describe your data cleaning steps so far, and give the dimension (rows x columns) of the resulting dataset. Are these data tidy?
 
 Answer:
 
-This dataset contains 23 variables, including 16 character variables, e.g. division, line,4 numeric variables, e.g. station latitude, station longitude, and 3 logical variables, e.g. ada, free crossover, entry.
+This dataset contains 19 variables, including 11 character variables, e.g. line, 6 numeric variables, e.g. station latitude, station longitude, and 2 logical variables, e.g. ada, entry.
 
-After I read in the data, I used clean_names() to make the all the variables name lowercase, and then I mutated the entry variable from character to logical type. I converted route8-route11 to character variable, since route variable spread over the table, so I made the route1 to route11 to be a new route_number variable while the value under each route made a new value variable route_name. Then I deleted the prefix of route1 to route11 in order to only contain numbers. In the end, I removed all the rows which contains NA in route_name (where the subway does not have that routename, e.g. N/R).
+After I read in the data, I used clean_names() to make the all the variables name lowercase, and only select line, station_name, station_latitude, station_longitude, route, entry, vending, entrance_type, ada variables. Then I mutated the entry variable from character to logical type. 
 
-There are 4270 rows and 23 columns. The data can be considered tidy, since each variable has its own column and each observation has its own row while each value in its cell.
+There are 1868 rows and 19 columns. The data cannot be considered tidy, since the route variable spread over the table, and does not have its own column.
 
 ### b)
 
@@ -57,17 +51,93 @@ Answer the following questions using these data:
 How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
 
 ```{r}
-
+NYC_Transit %>% 
+  select(station_name, line) %>% 
+  distinct() %>% 
+  count()
 ```
+
+Answer: 465 distinct stations.
 
 How many stations are ADA compliant?
 
-What proportion of station entrances / exits without vending allow entrance?
-Reformat data so that route number and route name are distinct variables. 
+```{r}
+NYC_Transit %>% 
+  select(station_name, line, ada) %>%
+  filter(ada == TRUE) %>% 
+  distinct() %>% 
+  count()
+```
 
+Answer: 84 distinct stations are ADA compliant.
+
+What proportion of station entrances / exits without vending allow entrance?
+
+```{r}
+# number of station without vending
+Non_vending <-
+  NYC_Transit %>% 
+  select(station_name, line, vending) %>%
+  filter(vending == "NO") %>% 
+  distinct() %>% 
+  count()
+# proportion
+Non_vending / 465
+```
+
+Answer: 21.29% proportion of station entrances / exits without vending allow entrance.
+
+Reformat data so that route number and route name are distinct variables.
 How many distinct stations serve the A train? 
 
+```{r}
+# converted route8-route11 to character variable
+# made the route1 to route11 to be a new route_number variable while the value # under each route made a new value variable route_name
+# deleted the prefix of route1 to route11 in order to only contain numbers
+# removed all the rows which contains NA in route_name
+NYC_Transit_tidy <- NYC_Transit %>% 
+  mutate(route8 = as.character(route8), route9 = as.character(route9),
+         route10 = as.character(route10), route11 = as.character(route11)) %>% 
+  pivot_longer(route1:route11, names_to = "route_number",
+               names_prefix = "route", values_to = "route_name") %>% 
+  drop_na(route_name)
+
+NYC_Transit_tidy %>% 
+  select(station_name, line, route_name) %>%
+  filter(route_name == "A") %>% 
+  distinct() %>% 
+  count()
+```
+
+Answer: 60 distinct stations serve the A train.
+
 Of the stations that serve the A train, how many are ADA compliant?
+
+```{r}
+NYC_Transit_tidy %>% 
+  select(station_name, line, route_name, ada) %>%
+  filter(route_name == "A" & ada == TRUE) %>% 
+  distinct() %>% 
+  count()
+```
+
+Answer: Of the stations that serve the A train, 17 distinct stations are ADA compliant.
+
+## Problem 2
+
+This problem uses the Mr. Trash Wheel dataset, available as an Excel file on the course website.
+
+Read and clean the Mr. Trash Wheel sheet:
+
+specify the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
+
+use reasonable variable names
+
+omit rows that do not include dumpster-specific data
+
+round the number of sports balls to the nearest integer and converts the result to an integer variable (using as.integer)
+
+
 
 
 
