@@ -6,8 +6,8 @@ date: "2022-10-03"
 
 ```{r}
 # library all packages that we need at the beginning
-library(ggplot2)
 library(tidyverse)
+library(dplyr)
 ```
 
 ## Problem 1
@@ -21,32 +21,44 @@ Read and clean the data; retain line, station, name, station latitude / longitud
 ```{r}
 # read in data from CSV file
 NYC_Transit <- read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
-# show the first several lines of the data
+# show the first several lines of the original data
 head(NYC_Transit)
-# clean the column names and convert "entry" from char to logical.
-NYC_Transit <- NYC_Transit %>% 
+# clean the data and convert "entry" from char to logical.
+NYC_Transit_tidy <- NYC_Transit %>% 
   janitor::clean_names() %>% 
-  mutate(entry = recode(entry, 'YES' = TRUE, 'NO' = FALSE))
-# show the first several lines of cleaned data
-head(NYC_Transit)
-c(nrow(NYC_Transit), ncol(NYC_Transit))
+  mutate(entry = recode(entry, 'YES' = TRUE, 'NO' = FALSE)) %>% 
+  mutate(route8 = as.character(route8), route9 = as.character(route9),
+         route10 = as.character(route10), route11 = as.character(route11)) %>% 
+  pivot_longer(route1:route11, names_to = "route_number",
+               names_prefix = "route", values_to = "route_name") %>% 
+  drop_na(route_name)
+# show the first several lines of the cleaned data
+head(NYC_Transit_tidy)
+skimr::skim(NYC_Transit_tidy)
+# show the specific changed columns
+NYC_Transit_tidy %>% 
+  select(entry, route_number, route_name)
 ```
 
 Write a short paragraph about this dataset – explain briefly what variables the dataset contains, describe your data cleaning steps so far, and give the dimension (rows x columns) of the resulting dataset. Are these data tidy?
 
 Answer:
 
-This dataset contains 21 character variables, e.g. division, line, 8 double variables, e.g. station latitude, station longitude, and 3 logical variables, e.g. ada, free crossover, entry.
+This dataset contains 23 variables, including 16 character variables, e.g. division, line,4 numeric variables, e.g. station latitude, station longitude, and 3 logical variables, e.g. ada, free crossover, entry.
 
-After I read in the data, I used clean_names() to make the all the variables name lowercase, and then I just mutated the entry variable from character to logical type.
+After I read in the data, I used clean_names() to make the all the variables name lowercase, and then I mutated the entry variable from character to logical type. I converted route8-route11 to character variable, since route variable spread over the table, so I made the route1 to route11 to be a new route_number variable while the value under each route made a new value variable route_name. Then I deleted the prefix of route1 to route11 in order to only contain numbers. In the end, I removed all the rows which contains NA in route_name (where the subway does not have that routename, e.g. N/R).
 
-There are 1868 rows and 32 columns. The data can be considered tidy, since each variable has its own column and each observation has its own row while each value in its cell.
+There are 4270 rows and 23 columns. The data can be considered tidy, since each variable has its own column and each observation has its own row while each value in its cell.
 
 ### b)
 
 Answer the following questions using these data:
 
 How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
+
+```{r}
+
+```
 
 How many stations are ADA compliant?
 
