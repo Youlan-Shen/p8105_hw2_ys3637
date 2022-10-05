@@ -167,18 +167,58 @@ Professor_Trash <- Professor_Trash %>%
   select(type_of_wheel, everything())
 # show the first several lines of the cleaned data
 head(Professor_Trash)
-# add the type of wheel to Mr_Trash
+# add the type of wheel to Mr_Trash, make sue year is a numeric var.
 Mr_Trash <- Mr_Trash %>% 
   mutate(type_of_wheel = "Mr.", year = as.numeric(year)) %>% 
   select(type_of_wheel, everything())
 # combine Mr_Trash and Professor_Trash
-full_join(Mr_Trash, Professor_Trash)
+Two_Trash <- full_join(Mr_Trash, Professor_Trash)
 ```
 
-Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of sports balls collected by Mr. Trash Wheel in 2020?
+Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. 
 
+```{r}
+# find the # of rows and cols
+c(nrow(Two_Trash), ncol(Two_Trash))
+# show the first several lines of the data
+head(Two_Trash)
+# example of the Mr. and Professor trash data when dumpster is 5
+example <- Two_Trash %>% 
+  filter((type_of_wheel == "Mr." | type_of_wheel == "Professor") & dumpster == 5)
+# print out the example
+example
+# print of the date, and sports balls column of both trash data
+example %>% 
+  select(type_of_wheel, dumpster, date, sports_balls)
+```
 
+Answer:
 
+This dataset contains 15 variables, with original 14 variables in Mr.Trash, and the new char variable that I added--type_of_wheel--which indicates the type of the wheel, e.g. Mr, Professor.
+
+There are total of 641 observations with 15 columns. As the example given above, the two trash wheel datasets are fully joined and they share 14 same variables while under "sports_balls" column, Professor Trash has all NA values.
+
+For available data, what was the total weight of trash collected by Professor Trash Wheel? 
+
+```{r}
+Two_Trash %>% 
+  select(type_of_wheel, weight_tons) %>% 
+  filter(type_of_wheel == "Professor") %>% 
+  summarise(sum = sum(weight_tons))
+```
+
+Answer: The total weight of trash collected by Professor  Wheel is 190 tons.
+
+What was the total number of sports balls collected by Mr. Trash Wheel in 2020?
+
+```{r}
+Two_Trash %>% 
+  select(type_of_wheel, year, sports_balls) %>% 
+  filter(type_of_wheel == "Mr." & year == 2020) %>% 
+  summarise(sum = sum(sports_balls))
+```
+
+Answer: The total number of sports balls collected by Mr. Trash Wheel in 2020 is 856.
 
 
 
