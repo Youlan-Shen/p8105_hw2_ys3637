@@ -4,4 +4,61 @@ output: github_document
 date: "2022-10-03"
 ---
 
+```{r}
+# library all packages that we need at the beginning
+library(ggplot2)
+library(tidyverse)
+```
+
+## Problem 1
+
+This problem focuses on NYC Transit data; in particular, this CSV file contains information related to each entrance and exit for each subway station in NYC. If you’re not familiar with the NYC subway system, keeping a map in mind while looking at these data might help.
+
+### a)
+
+Read and clean the data; retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance. Convert the entry variable from character (YES vs NO) to a logical variable (the ifelse or recode function may be useful).
+
+```{r}
+# read in data from CSV file
+NYC_Transit <- read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+# show the first several lines of the data
+head(NYC_Transit)
+# clean the column names and convert "entry" from char to logical.
+NYC_Transit <- NYC_Transit %>% 
+  janitor::clean_names() %>% 
+  mutate(entry = recode(entry, 'YES' = TRUE, 'NO' = FALSE))
+# show the first several lines of cleaned data
+head(NYC_Transit)
+c(nrow(NYC_Transit), ncol(NYC_Transit))
+```
+
+Write a short paragraph about this dataset – explain briefly what variables the dataset contains, describe your data cleaning steps so far, and give the dimension (rows x columns) of the resulting dataset. Are these data tidy?
+
+Answer:
+
+This dataset contains 21 character variables, e.g. division, line, 8 double variables, e.g. station latitude, station longitude, and 3 logical variables, e.g. ada, free crossover, entry.
+
+After I read in the data, I used clean_names() to make the all the variables name lowercase, and then I just mutated the entry variable from character to logical type.
+
+There are 1868 rows and 32 columns. The data can be considered tidy, since each variable has its own column and each observation has its own row while each value in its cell.
+
+### b)
+
+Answer the following questions using these data:
+
+How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
+
+How many stations are ADA compliant?
+
+What proportion of station entrances / exits without vending allow entrance?
+Reformat data so that route number and route name are distinct variables. 
+
+How many distinct stations serve the A train? 
+
+Of the stations that serve the A train, how many are ADA compliant?
+
+
+
+
+
 
