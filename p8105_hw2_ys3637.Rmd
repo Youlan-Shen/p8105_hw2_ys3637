@@ -144,7 +144,8 @@ Mr_Trash <- read_excel("data/Trash Wheel Collection Data.xlsx",
                        sheet = 'Mr. Trash Wheel', range = 'A2:N550')
 # show the first several lines of the original data
 head(Mr_Trash)
-# clean the data
+# clean the data, drop rows without dumpster data
+# make sports balls as nearest integer
 Mr_Trash <- Mr_Trash %>% 
   janitor::clean_names() %>% 
   drop_na(dumpster) %>% 
@@ -159,7 +160,7 @@ Use a similar process to import, clean, and organize the data for Professor Tras
 # read in data from excel file
 Professor_Trash <- read_excel("data/Trash Wheel Collection Data.xlsx",
                        sheet = 'Professor Trash Wheel', range = 'A2:M97')
-# clean the data
+# clean the data, add a char. var. to indicate wheel's type
 Professor_Trash <- Professor_Trash %>% 
   janitor::clean_names() %>% 
   drop_na(dumpster) %>% 
@@ -167,7 +168,7 @@ Professor_Trash <- Professor_Trash %>%
   select(type_of_wheel, everything())
 # show the first several lines of the cleaned data
 head(Professor_Trash)
-# add the type of wheel to Mr_Trash, make sue year is a numeric var.
+# add the type of wheel to Mr_Trash, make sure year is a numeric var.
 Mr_Trash <- Mr_Trash %>% 
   mutate(type_of_wheel = "Mr.", year = as.numeric(year)) %>% 
   select(type_of_wheel, everything())
@@ -178,8 +179,10 @@ Two_Trash <- full_join(Mr_Trash, Professor_Trash)
 Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. 
 
 ```{r}
-# find the # of rows and cols
-c(nrow(Two_Trash), ncol(Two_Trash))
+# find the # of rows and cols of the combined dataset
+row <- nrow(Two_Trash)
+col <- ncol(Two_Trash)
+c(row, col)
 # show the first several lines of the data
 head(Two_Trash)
 # example of the Mr. and Professor trash data when dumpster is 5
@@ -187,16 +190,16 @@ example <- Two_Trash %>%
   filter((type_of_wheel == "Mr." | type_of_wheel == "Professor") & dumpster == 5)
 # print out the example
 example
-# print of the date, and sports balls column of both trash data
+# print out the date, and sports balls column of both trash data
 example %>% 
   select(type_of_wheel, dumpster, date, sports_balls)
 ```
 
 Answer:
 
-This dataset contains 15 variables, with original 14 variables in Mr.Trash, and the new char variable that I added--type_of_wheel--which indicates the type of the wheel, e.g. Mr, Professor.
+This dataset contains `r col` variables, with original 14 variables in Mr.Trash, and the new char variable that I added--type_of_wheel--which indicates the type of the wheel, e.g. Mr, Professor.
 
-There are total of 641 observations with 15 columns. As the example given above, the two trash wheel datasets are fully joined and they share 14 same variables while under "sports_balls" column, Professor Trash has all NA values.
+There are total of `r row` observations with `r col` columns. As the example given above, the two trash wheel datasets are fully joined and they share 14 same variables while under "sports_balls" column, Professor Trash has all NA values--since Professor Trash does not have sports_balls variable originally.
 
 For available data, what was the total weight of trash collected by Professor Trash Wheel? 
 
@@ -227,7 +230,7 @@ This problem uses the FiveThirtyEight data; these data were gathered to create t
 First, clean the data in pols-month.csv. Use separate() to break up the variable mon into integer variables year, month, and day; replace month number with month name; create a president variable taking values gop and dem, and remove prez_dem and prez_gop; and remove the day variable.
 
 ```{r}
-# read in data from csv file and clean the data 
+# read in data from csv file and clean the data as required above
 pols_month <- read_csv("data/fivethirtyeight_datasets/pols-month.csv") %>%
   janitor::clean_names() %>% 
   separate(mon, into = c("year", "month", "day"), sep = "-") %>% 
@@ -236,7 +239,7 @@ pols_month <- read_csv("data/fivethirtyeight_datasets/pols-month.csv") %>%
                 "06" = "Jun", "07" = "Jul", "08" = "Aug",
                 "09" = "Sept", "10" = "Oct", "11" = "Nov",
                 "12" = "Dec"),
-         year = as.numeric(year),
+         year = as.integer(year),
          prez_gop = recode(prez_gop, "1" = "gop",  "2" = "uknown"),
          prez_dem = recode(prez_dem, "1" = "dem",  "2" = "uknown")) %>% 
   pivot_longer(
@@ -246,20 +249,21 @@ pols_month <- read_csv("data/fivethirtyeight_datasets/pols-month.csv") %>%
   filter(president == "gop" | president == "dem" | president == "uknown") %>% 
   select(-prez_side, -day)
 # I treated "1" in prez_gop represents republican (gop), and "2" in prez_gop represents uknown, and similarly for prez_dem, then delete all the row contains "0" values in president column.
+# print the dataset
 pols_month  
 ```
 
 Second, clean the data in snp.csv using a similar process to the above. For consistency across datasets, arrange according to year and month, and organize so that year and month are the leading columns.
 
 ```{r}
-# read in data from csv file and clean the data 
+# read in data from csv file and clean the data as required above
 snp <- read_csv("data/fivethirtyeight_datasets/snp.csv") %>%
   janitor::clean_names() %>% 
   separate(date, into = c("month", "day", "year"), sep = "/")  %>% 
   mutate(year = as.numeric(year),
          month = as.numeric(month),
          centry = ifelse(year >= 50, 1900, 2000),
-         year = year + centry) %>% 
+         year = as.integer(year + centry)) %>% 
   select(year, month, close) %>% 
   arrange(year, month) %>% 
   mutate(month = recode(month, "1" = "Jan",  "2" = "Feb",
@@ -268,25 +272,29 @@ snp <- read_csv("data/fivethirtyeight_datasets/snp.csv") %>%
                 "9" = "Sept", "10" = "Oct", "11" = "Nov",
                 "12" = "Dec"))
 # arrange the snp dataset according to year and month, to make sure it follows pols_month dataset logic
+# print the dataset
 snp
 ```
 
 Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
 
 ```{r}
-# read in data from csv file and clean the data 
+# read in data from csv file and clean the data as required
 unemployment <- read_csv("data/fivethirtyeight_datasets/unemployment.csv") %>%
   janitor::clean_names() %>% 
   pivot_longer(jan:dec, names_to = "month",
                values_to = "perc_of_unemploymt") %>% 
-  mutate(month = str_to_title(month),
+  mutate(year = as.integer(year),
+         month = str_to_title(month),
          month = recode(month, "Sep" = "Sept"))
+# print out the dataset
 unemployment
 ```
 
 Join the datasets by merging snp into pols, and merging unemployment into the result.
 
 ```{r}
+# use left join to only fully include pols's year and month
 snp_pols <- left_join(pols_month, snp, by = c("year", "month"))
 total <- left_join(snp_pols, unemployment, by = c("year", "month"))
 # print the total joined dataset
@@ -296,6 +304,7 @@ total
 # print the information of 1950 to check the result
 total %>% 
   filter(year == 1950)
+# the result is correct
 ```
 
 Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
