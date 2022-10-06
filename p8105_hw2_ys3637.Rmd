@@ -267,7 +267,7 @@ snp <- read_csv("data/fivethirtyeight_datasets/snp.csv") %>%
                 "6" = "Jun", "7" = "Jul", "8" = "Aug",
                 "9" = "Sept", "10" = "Oct", "11" = "Nov",
                 "12" = "Dec"))
-# arrange the snp dataset according to year adn month, to make sure it follows pols_month dataset logic
+# arrange the snp dataset according to year and month, to make sure it follows pols_month dataset logic
 snp
 ```
 
@@ -284,6 +284,28 @@ unemployment <- read_csv("data/fivethirtyeight_datasets/unemployment.csv") %>%
 unemployment
 ```
 
+Join the datasets by merging snp into pols, and merging unemployment into the result.
 
+```{r}
+snp_pols <- left_join(pols_month, snp, by = c("year", "month"))
+total <- left_join(snp_pols, unemployment, by = c("year", "month"))
+# print the total joined dataset
+total <- total %>% 
+  select(year, month, president, close, perc_of_unemploymt, everything())
+total
+# print the information of 1950 to check the result
+total %>% 
+  filter(year == 1950)
+```
 
+Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
 
+Answer:
+
+For pols_month dataset, its dimension is 822 rows by 9 columns, range of years is from 1947 to 2015, 68 years, and key variables are year, month, the party of president with date corresponding governors/senators/representatives number in both democratic and republican.
+
+For snp dataset, its dimension is 787 rows by 3 columns, range of years is from 1950 to 2015, 65 years, and key variables are year, month, stock market closing value.
+
+For unemployment dataset, its dimension is 816 rows by 3 columns, range of years is from 1948 to 2015, 67 years, and key variables are year, month, unemployment rate.
+
+The resulting dataset is based on the pols_month dataset, I used left join, so all the years and months in pols were remained. Therefore, the result dataset's dimension is 822 rows by 11 columns, range of years is from 1947 to 2015, 68 years, and key variables are year, month, president, ..., and stock market closing value and unemployment rate for corresponding date.
